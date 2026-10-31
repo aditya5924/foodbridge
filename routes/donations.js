@@ -24,7 +24,14 @@ r.post('/',permit('donor'),parse(createSchema),asyncRoute(async(req,res)=>{
   const {rows}=await c.query(`INSERT INTO donations(donor_id,title,category,quantity,unit,prepared_at,pickup_start,pickup_end,expires_at,storage,location,lat,lng,photo_url,safety)
    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,'passed') RETURNING id`,
    [req.user.id,b.title,b.category,b.quantity,b.unit,b.preparedAt,b.pickupStart,b.pickupEnd,b.expiresAt,b.storage,b.location,b.lat??null,b.lng??null,b.photoUrl??null]);
-  await note(c,rows[0].id,req.user,'Donation created','available');return rows[0];
+  await note(c,rows[0].id,req.user,'Donation created','available');
+  // Dispatch a notification to all verified NGO accounts in the shared database.
+  const {rows:recipients}=await c.query(`SELECT u.id FROM users u JOIN organizations o ON o.id=u.organization_id
+      WHERE u.role='organization' AND o.status='verified'`);
+  for(const recipient of recipients){
+    await notify(c,recipient.id,`New food available: ${b.title} (${b.quantity} ${b.unit}) from ${req.user.name}`,'donation');
+  }
+  return rows[0];
  });res.status(201).json(await getDonation(row.id));
 }));
 r.get('/:id',asyncRoute(async(req,res)=>{
