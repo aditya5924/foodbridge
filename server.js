@@ -28,6 +28,9 @@ app.use('/api/organizations',organizations);app.use('/api/incidents',incidents);
 app.use('/api/impact',impact);app.use('/api/uploads',uploads);app.use('/api/users',users);app.use('/api/donor/schedules',schedules);
 app.use('/uploads',express.static(resolve(process.env.UPLOAD_DIR||'uploads'),{dotfiles:'deny',index:false}));
 app.get('/api/health',async(req,res,next)=>{try{await pool.query('SELECT 1');res.json({ok:true,service:'foodbridge-api'});}catch(e){next(e);}});
+app.get("/", (req, res) => {
+    res.send("FoodBridge API is running successfully!");
+});
 app.use((req,res)=>res.status(404).json({error:{code:'NOT_FOUND',message:'Endpoint not found'}}));
 app.use((err,req,res,next)=>{
  const status=err.status|| (err.code==='LIMIT_FILE_SIZE'?413:500);
