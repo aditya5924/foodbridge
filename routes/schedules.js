@@ -1,0 +1,10 @@
+import {Router} from 'express';
+import {z} from 'zod';
+import {query} from '../config/db.js';
+import {authenticate,permit,asyncRoute} from '../middleware/auth.js';
+import {parse} from '../services/helpers.js';
+const r=Router();r.use(authenticate,permit('donor'));
+const cols='id,user_id AS "userId",frequency,day,time';
+r.get('/',asyncRoute(async(req,res)=>{const {rows}=await query(`SELECT ${cols} FROM donor_schedules WHERE user_id=$1 ORDER BY created_at DESC`,[req.user.id]);res.json(rows);}));
+r.post('/',parse(z.object({frequency:z.enum(['daily','weekly']),day:z.string().optional(),time:z.string().regex(/^\d\d:\d\d$/)})),asyncRoute(async(req,res)=>{const {rows}=await query(`INSERT INTO donor_schedules(user_id,frequency,day,time) VALUES($1,$2,$3,$4) RETURNING ${cols}`,[req.user.id,req.body.frequency,req.body.day||null,req.body.time]);res.status(201).json(rows[0]);}));
+export default r;

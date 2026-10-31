@@ -1,0 +1,1 @@
+export const qs = (values={}) => { const params=new URLSearchParams(); Object.entries(values).forEach(([key,value])=>{if(value!==undefined && value!==null && value!=='')params.set(key,String(value));}); const text=params.toString();return text?`?${text}`:''; };
