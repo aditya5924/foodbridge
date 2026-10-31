@@ -20,8 +20,15 @@ if(!process.env.JWT_SECRET||process.env.JWT_SECRET.length<32)throw new Error('Se
 if(!process.env.DATABASE_URL)throw new Error('Set DATABASE_URL in .env');
 const app=express();app.disable('x-powered-by');app.use(helmet({crossOriginResourcePolicy:{policy:'cross-origin'}}));
 const origins=(process.env.FRONTEND_ORIGINS||'http://localhost:5173').split(',').map(x=>x.trim());
-app.use(cors({origin:(origin,cb)=>!origin||origins.includes(origin)?cb(null,true):cb(new Error('CORS origin not allowed'))}));
-app.use(express.json({limit:'200kb'}));
+app.use(cors({
+  origin: [
+    "https://foodbridge-2-gf5e.onrender.com",
+    "http://localhost:5173",
+    "http://localhost:5174"
+  ],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));app.use(express.json({limit:'200kb'}));
 app.use('/api/auth',rateLimit({windowMs:15*60*1000,limit:60,standardHeaders:'draft-7',legacyHeaders:false}),auth);
 app.use('/api/donations',donations);app.use('/api/reservations',reservations);app.use('/api/pickups',pickups);
 app.use('/api/organizations',organizations);app.use('/api/incidents',incidents);app.use('/api/notifications',notifications);
